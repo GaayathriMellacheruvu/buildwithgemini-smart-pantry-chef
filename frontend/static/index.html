@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Pantry Chef</title>
+<!-- Material Symbols for A2UI Icon components -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+<style>
+  :root {
+    --accent: #16a34a;
+    --accent-dark: #15803d;
+    --accent-light: #f0fdf4;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --sidebar-bg: #ffffff;
+  }
+
+  [data-theme="dark"] {
+    --accent: #22c55e;
+    --accent-dark: #16a34a;
+    --accent-light: rgba(34, 197, 94, 0.15);
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --border: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --sidebar-bg: #1e293b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* --- Header & Actions --- */
+  header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+  }
+  .header-content {
+    max-width: 850px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .header-icon {
+    font-size: 1.5rem;
+    background: var(--accent-light);
+    border: 1px solid var(--accent);
+    padding: 0.35rem 0.5rem;
+    border-radius: 12px;
+  }
+  .header-title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .header-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.1rem;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 2px var(--accent-light);
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .icon-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.45rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s ease;
+  }
+  .icon-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+  }
+  .badge-count {
+    background: var(--accent);
+    color: white;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+  }
+
+  /* --- Dietary Filter Badges --- */
+  .dietary-container {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1.5rem;
+  }
+  .dietary-bar {
+    max-width: 850px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dietary-bar::-webkit-scrollbar { display: none; }
+  .dietary-label {
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.65rem;
+    border-radius: 14px;
+    font-size: 0.775rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .badge-btn.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* --- Chat Log & Dialogue Stream --- */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1rem;
+    max-width: 850px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  
+  .msg-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    animation: fadeIn 0.25s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg-wrapper.user {
+    flex-direction: row-reverse;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .avatar.agent {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+  }
+  .avatar.user {
+    background: var(--accent);
+    color: white;
+  }
+  
+  .msg-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+  }
+  .msg-wrapper.user .msg-content {
+    align-items: flex-end;
+  }
+  .sender-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    padding: 0 0.25rem;
+  }
+
+  .bubble {
+    padding: 0.85rem 1.15rem;
+    border-radius: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    line-height: 1.5;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+  }
+  .msg-wrapper.agent .bubble {
+    border-top-left-radius: 4px;
+  }
+  .msg-wrapper.user .bubble {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #ffffff;
+    border: none;
+    border-top-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+  }
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  /* Bubble Action Overlay (Copy & Bookmark) */
+  .msg-actions {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+  .msg-actions:hover { opacity: 1; }
+  .action-chip {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.725rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+  }
+  .action-chip:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Animated Cooking Indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.25rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .chef-bounce {
+    display: inline-block;
+    animation: bounce 1s infinite alternate;
+  }
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-4px); }
+  }
+  .dots { display: inline-flex; gap: 3px; }
+  .dot {
+    width: 5px; height: 5px; background: var(--accent); border-radius: 50%;
+    animation: pulse 1.4s infinite ease-in-out both;
+  }
+  .dot:nth-child(1) { animation-delay: -0.32s; }
+  .dot:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
+
+  /* --- Example Prompts Row --- */
+  .examples-container {
+    max-width: 850px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.25rem 1rem 0.5rem;
+  }
+  .examples {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+  .examples::-webkit-scrollbar { display: none; }
+  .example-btn {
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 0.45rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.825rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+  }
+  .example-btn:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* --- Footer & Input Bar --- */
+  .footer-container {
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    padding: 0.85rem 1rem 1.25rem;
+  }
+  form {
+    max-width: 850px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg);
+    padding: 0.35rem 0.35rem 0.35rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 28px;
+    align-items: center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  form:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+    background: var(--card-bg);
+  }
+  .voice-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+  }
+  .voice-btn:hover { color: var(--accent); background: var(--accent-light); }
+  .voice-btn.recording { color: #ef4444; animation: pulseRed 1s infinite; }
+  @keyframes pulseRed {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    outline: none;
+    color: var(--text-primary);
+  }
+  form button[type="submit"] {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 22px;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  form button[type="submit"]:hover { background: var(--accent-dark); }
+
+  /* --- Pantry & Favorites Sidebar --- */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+  .sidebar-overlay.active { opacity: 1; visibility: visible; }
+  .sidebar {
+    position: fixed;
+    top: 0; right: -360px; bottom: 0;
+    width: 360px;
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    z-index: 101;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    overflow-y: auto;
+  }
+  .sidebar.active { right: 0; }
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .sidebar-header h3 { margin: 0; font-size: 1.1rem; color: var(--text-primary); }
+  .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; }
+  .sidebar-section { margin-bottom: 1.5rem; }
+  .sidebar-section h4 { margin: 0 0 0.6rem; font-size: 0.875rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  
+  .pantry-input-row { display: flex; gap: 0.4rem; margin-bottom: 0.75rem; }
+  .pantry-input-row input {
+    flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text-primary); font-size: 0.875rem;
+  }
+  .pantry-input-row button {
+    padding: 0.5rem 0.85rem; border: none; border-radius: 8px; background: var(--accent); color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  }
+  .pantry-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem; min-height: 40px; }
+  .pantry-chip {
+    background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent); padding: 0.25rem 0.6rem; border-radius: 14px; font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 0.35rem;
+  }
+  .pantry-chip span { cursor: pointer; font-weight: bold; }
+  
+  .primary-action-btn {
+    width: 100%; padding: 0.65rem; border: none; border-radius: 10px; background: var(--accent); color: white; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: background 0.2s ease;
+  }
+  .primary-action-btn:hover { background: var(--accent-dark); }
+  .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+  
+  .favorite-item {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; margin-bottom: 0.5rem; font-size: 0.85rem; line-height: 1.4;
+  }
+
+  /* --- A2UI Cards --- */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-md);
+    max-width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.75rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.5; color: var(--text-primary); }
+  .a2text.a2-h1 { font-size: 1.35rem; font-weight: 700; }
+  .a2text.a2-h2 { font-size: 1.15rem; font-weight: 700; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; }
+  .a2text.a2-h4 { font-size: 0.95rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.825rem; color: var(--text-secondary); }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.5rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 12px; display: block; box-shadow: var(--shadow-sm); }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; vertical-align: middle; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-content">
+    <div class="header-brand">
+      <span class="header-icon">🧑‍🍳</span>
+      <div>
+        <div class="header-title">Smart Pantry Chef</div>
+        <div class="header-status"><span class="status-dot"></span> AI Culinary Assistant</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="pantryToggleBtn" title="My Pantry & Favorites">
+        🧺 Pantry <span class="badge-count" id="pantryBadge">0</span>
+      </button>
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle Theme">🌙</button>
+    </div>
+  </div>
+</header>
+
+<div class="dietary-container">
+  <div class="dietary-bar">
+    <span class="dietary-label">Preferences:</span>
+    <button class="badge-btn" data-tag="Vegetarian">🌱 Vegetarian</button>
+    <button class="badge-btn" data-tag="Gluten-Free">🌾 Gluten-Free</button>
+    <button class="badge-btn" data-tag="Low Carb">🔥 Low Carb</button>
+    <button class="badge-btn" data-tag="Under 30 Mins">⏱️ Under 30m</button>
+    <button class="badge-btn" data-tag="High Protein">💪 High Protein</button>
+  </div>
+</div>
+
+<div id="log"></div>
+
+<div class="footer-container">
+  <div class="examples-container">
+    <div class="examples" id="examples">
+      <button class="example-btn" type="button" data-prompt="What recipe can I make with tomatoes, garlic, and pasta under 30 minutes?">🍅 Tomatoes, garlic & pasta under 30m</button>
+      <button class="example-btn" type="button" data-prompt="Recommend a healthy low-carb dinner using my available pantry items.">🥗 Low-carb dinner from pantry</button>
+      <button class="example-btn" type="button" data-prompt="Show me a recipe with plating preview and nutritional macros.">🥑 Recipe with plating & macros</button>
+    </div>
+  </div>
+  <form id="form">
+    <button type="button" class="voice-btn" id="voiceBtn" title="Hands-free Voice Input">🎙️</button>
+    <input id="input" placeholder="Ask your chef for recipes or meal ideas…" autocomplete="off" autofocus>
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<!-- Pantry & Favorites Sidebar Drawer -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>🧺 My Pantry & Favorites</h3>
+    <button class="close-btn" id="sidebarCloseBtn">×</button>
+  </div>
+  
+  <div class="sidebar-section">
+    <h4>Pantry Ingredients</h4>
+    <div class="pantry-input-row">
+      <input type="text" id="pantryInput" placeholder="Add ingredient (e.g. Garlic)">
+      <button id="addPantryBtn">Add</button>
+    </div>
+    <div class="pantry-chips" id="pantryChips"></div>
+    <button class="primary-action-btn" id="usePantryBtn">🍳 Ask Chef with Pantry Items</button>
+  </div>
+  
+  <hr class="sidebar-divider">
+  
+  <div class="sidebar-section">
+    <h4>⭐ Saved Favorites</h4>
+    <div id="favoritesList"></div>
+  </div>
+</aside>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const voiceBtn = document.getElementById("voiceBtn");
+const themeToggleBtn = document.getElementById("themeToggleBtn");
+const pantryToggleBtn = document.getElementById("pantryToggleBtn");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+const sidebar = document.getElementById("sidebar");
+const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+const pantryInput = document.getElementById("pantryInput");
+const addPantryBtn = document.getElementById("addPantryBtn");
+const pantryChips = document.getElementById("pantryChips");
+const pantryBadge = document.getElementById("pantryBadge");
+const usePantryBtn = document.getElementById("usePantryBtn");
+const favoritesList = document.getElementById("favoritesList");
+
+// State
+let pantryItems = JSON.parse(localStorage.getItem("pantryItems") || '["Tomatoes", "Garlic", "Pasta", "Olive Oil"]');
+let savedFavorites = JSON.parse(localStorage.getItem("savedFavorites") || '[]');
+let activeDietaryTags = new Set();
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+// Render Pantry
+function renderPantry() {
+  pantryChips.innerHTML = "";
+  pantryBadge.textContent = pantryItems.length;
+  pantryItems.forEach((item, idx) => {
+    const chip = el("div", "pantry-chip", item + " ");
+    const removeSpan = el("span", null, "×");
+    removeSpan.onclick = () => { pantryItems.splice(idx, 1); savePantry(); };
+    chip.appendChild(removeSpan);
+    pantryChips.appendChild(chip);
+  });
+}
+function savePantry() {
+  localStorage.setItem("pantryItems", JSON.stringify(pantryItems));
+  renderPantry();
+}
+addPantryBtn.onclick = () => {
+  const val = pantryInput.value.trim();
+  if (val && !pantryItems.includes(val)) {
+    pantryItems.push(val);
+    pantryInput.value = "";
+    savePantry();
+  }
+};
+renderPantry();
+
+// Render Favorites
+function renderFavorites() {
+  favoritesList.innerHTML = "";
+  if (!savedFavorites.length) {
+    favoritesList.appendChild(el("div", null, "No saved recipes yet. Click ⭐ Save on any recipe reply!"));
+    return;
+  }
+  savedFavorites.forEach((fav, idx) => {
+    const item = el("div", "favorite-item");
+    item.textContent = fav.slice(0, 140) + (fav.length > 140 ? "..." : "");
+    favoritesList.appendChild(item);
+  });
+}
+renderFavorites();
+
+// Sidebar Toggles
+pantryToggleBtn.onclick = () => { sidebar.classList.add("active"); sidebarOverlay.classList.add("active"); };
+sidebarCloseBtn.onclick = sidebarOverlay.onclick = () => { sidebar.classList.remove("active"); sidebarOverlay.classList.remove("active"); };
+
+usePantryBtn.onclick = () => {
+  if (!pantryItems.length) return;
+  input.value = `What recipe can I make using my pantry items: ${pantryItems.join(", ")}?`;
+  sidebar.classList.remove("active"); sidebarOverlay.classList.remove("active");
+  form.dispatchEvent(new Event("submit"));
+};
+
+// Dietary Filter Badges
+document.querySelectorAll(".badge-btn").forEach(btn => {
+  btn.onclick = () => {
+    const tag = btn.dataset.tag;
+    if (activeDietaryTags.has(tag)) {
+      activeDietaryTags.delete(tag);
+      btn.classList.remove("active");
+    } else {
+      activeDietaryTags.add(tag);
+      btn.classList.add("active");
+    }
+  };
+});
+
+// Theme Switcher (Dark Mode)
+let currentTheme = localStorage.getItem("theme") || "light";
+if (currentTheme === "dark") {
+  document.body.setAttribute("data-theme", "dark");
+  themeToggleBtn.textContent = "☀️";
+}
+themeToggleBtn.onclick = () => {
+  if (document.body.getAttribute("data-theme") === "dark") {
+    document.body.removeAttribute("data-theme");
+    themeToggleBtn.textContent = "🌙";
+    localStorage.setItem("theme", "light");
+  } else {
+    document.body.setAttribute("data-theme", "dark");
+    themeToggleBtn.textContent = "☀️";
+    localStorage.setItem("theme", "dark");
+  }
+};
+
+// Voice Speech Recognition
+let recognition = null;
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRec();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => { voiceBtn.classList.add("recording"); };
+  recognition.onend = recognition.onerror = () => { voiceBtn.classList.remove("recording"); };
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    input.value = transcript;
+  };
+}
+voiceBtn.onclick = () => {
+  if (!recognition) { alert("Speech recognition is not supported in this browser."); return; }
+  recognition.start();
+};
+
+function bubble(who) {
+  const wrapper = el("div", "msg-wrapper " + who);
+  const avatar = el("div", "avatar " + who, who === "user" ? "👤" : "🧑‍🍳");
+  const content = el("div", "msg-content");
+  const name = el("div", "sender-name", who === "user" ? "You" : "Smart Pantry Chef");
+  const b = el("div", "bubble");
+  
+  content.appendChild(name);
+  content.appendChild(b);
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(content);
+  
+  log.appendChild(wrapper);
+  log.scrollTop = log.scrollHeight;
+  return { b, content };
+}
+
+function showTypingIndicator() {
+  const wrapper = el("div", "msg-wrapper agent", null);
+  const avatar = el("div", "avatar agent", "🧑‍🍳");
+  const content = el("div", "msg-content");
+  const name = el("div", "sender-name", "Smart Pantry Chef");
+  
+  const indicator = el("div", "typing-indicator");
+  indicator.innerHTML = `<span class="chef-bounce">🍳</span> <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span> <span>Chef is brainstorming a recipe...</span>`;
+  
+  content.appendChild(name);
+  content.appendChild(indicator);
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(content);
+  
+  log.appendChild(wrapper);
+  log.scrollTop = log.scrollHeight;
+  return wrapper;
+}
+
+/* ----------------------------------------------------------------------------
+ * A2UI mini-renderer (v0.8 Basic Catalog subset).
+ * -------------------------------------------------------------------------- */
+
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function attachMessageActions(msgContent, textToCopy) {
+  const actionsRow = el("div", "msg-actions");
+  const copyBtn = el("button", "action-chip", "📋 Copy");
+  copyBtn.type = "button";
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(textToCopy);
+    copyBtn.textContent = "✓ Copied!";
+    setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 2000);
+  };
+  
+  const saveBtn = el("button", "action-chip", "⭐ Save Favorite");
+  saveBtn.type = "button";
+  saveBtn.onclick = () => {
+    savedFavorites.push(textToCopy);
+    localStorage.setItem("savedFavorites", JSON.stringify(savedFavorites));
+    renderFavorites();
+    saveBtn.textContent = "✓ Saved!";
+  };
+
+  actionsRow.appendChild(copyBtn);
+  actionsRow.appendChild(saveBtn);
+  msgContent.appendChild(actionsRow);
+}
+
+function renderReply(msgObj, parts) {
+  const { b, content } = msgObj;
+  b.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) b.appendChild(el("div", null, textStr));
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  
+  const fullText = textStr || flattenText(a2ui);
+  if (fullText) attachMessageActions(content, fullText);
+  
+  log.scrollTop = log.scrollHeight;
+}
+
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  let text = input.value.trim();
+  if (!text) return;
+
+  // Append active dietary constraint tags if selected
+  if (activeDietaryTags.size > 0) {
+    const tags = Array.from(activeDietaryTags).join(", ");
+    text += ` [Dietary constraints: ${tags}]`;
+  }
+
+  bubble("user").textContent = input.value.trim();
+  input.value = "";
+  
+  const indicator = showTypingIndicator();
+
+  try {
+    const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
+    const raw = await res.text();
+    indicator.remove(); // Remove animated indicator
+    
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+    
+    const replyObj = bubble("agent");
+    renderReply(replyObj, data.parts || []);
+  } catch (e) {
+    indicator.remove();
+    const replyObj = bubble("agent");
+    replyObj.b.textContent = "Error: " + e.message;
+  }
+});
+
+document.querySelectorAll(".example-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    input.value = btn.dataset.prompt;
+    form.dispatchEvent(new Event("submit"));
+  });
+});
+</script>
+</body>
+</html>
